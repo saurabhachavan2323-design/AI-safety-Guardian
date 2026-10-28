@@ -1,0 +1,16 @@
+# Python environment
+venv/
+__pycache__/
+*.py[cod]
+
+# Generated files
+recordings/
+runs/
+
+# Private settings
+.env
+.env.*
+!.env.example
+
+# Editor settings
+.vscode/

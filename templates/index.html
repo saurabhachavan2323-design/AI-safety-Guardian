@@ -1,0 +1,923 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#09111f">
+    <title>AI Safety Guardian | Command Centre</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .live-video {
+            position: relative;
+            min-height: 260px;
+            padding: 0;
+            overflow: hidden;
+            background: #050a11;
+        }
+
+        .live-video #liveFeed {
+            display: none;
+            width: 100%;
+            min-height: 260px;
+            max-height: 480px;
+            object-fit: contain;
+        }
+
+        .live-video .video-message {
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .live-video .video-message p {
+            max-width: 340px;
+        }
+
+        .live-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .live-badge,
+        .record-indicator {
+            padding: 7px 9px;
+            border-radius: 5px;
+            background: #0b1422e8;
+            border: 1px solid #34485e;
+            color: #c0d0e0;
+            font-size: 10px;
+        }
+
+        .live-badge {
+            color: #55d9f5;
+        }
+
+        .record-indicator.recording {
+            color: #ff747d;
+            border-color: #8b3c47;
+        }
+
+        .camera-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 13px;
+        }
+
+        .camera-controls button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        #recordMessage {
+            color: #9eb0c3;
+            font-size: 11px;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#overview">
+            <div class="brand-mark">AG</div>
+            <div>
+                <strong>SAFETY<span>GUARDIAN</span></strong>
+                <small>INDUSTRIAL INTELLIGENCE</small>
+            </div>
+        </a>
+
+        <div class="site-label">FACILITY OVERVIEW</div>
+
+        <div class="facility">
+            <div class="facility-icon">⌂</div>
+            <div>
+                <strong>Chemical Plant</strong>
+                <small>Facility / Main Unit</small>
+            </div>
+            <span class="status-dot"></span>
+        </div>
+
+        <div class="nav-label">WORKSPACE</div>
+
+        <nav class="navigation">
+            <a class="nav-link active" href="#overview">
+                <span class="nav-icon">▦</span> Overview
+            </a>
+
+            <a class="nav-link" href="#monitoring">
+                <span class="nav-icon">▣</span> Live Monitoring
+                <span class="nav-tag">LIVE</span>
+            </a>
+
+            <a class="nav-link" href="#incidents">
+                <span class="nav-icon">⚑</span> Incident Centre
+            </a>
+
+            <a class="nav-link" href="#zones">
+                <span class="nav-icon">◎</span> Safety Zones
+            </a>
+
+            <a class="nav-link" href="#analytics">
+                <span class="nav-icon">▥</span> Analytics
+            </a>
+        </nav>
+
+        <div class="nav-label">SYSTEM</div>
+
+        <nav class="navigation">
+            <a class="nav-link" href="#system">
+                <span class="nav-icon">⚙</span> System Status
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="environment-card">
+                <span class="status-dot"></span>
+                <div>
+                    <strong>Prototype Environment</strong>
+                    <small>Local development mode</small>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <span class="avatar">AG</span>
+                <div>
+                    <strong>Safety Operator</strong>
+                    <small>Demo session</small>
+                </div>
+                <span class="muted">●</span>
+            </div>
+
+            <p class="sidebar-version">
+                AI SAFETY GUARDIAN · v0.3.0
+            </p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="overview">
+
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-button"
+                        id="menuButton"
+                        aria-label="Toggle navigation">☰</button>
+
+                <div>
+                    <div class="breadcrumb">
+                        WORKSPACE / <span>OVERVIEW</span>
+                    </div>
+                    <h1>Command Centre</h1>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <div class="system-pill">
+                    <span class="status-dot"></span>
+                    <span>APPLICATION ONLINE</span>
+                </div>
+
+                <div class="clock-block">
+                    <strong id="clock">--:--:--</strong>
+                    <small id="date">Loading date...</small>
+                </div>
+            </div>
+        </header>
+
+        <!-- OVERVIEW -->
+        <section class="welcome-row">
+            <div>
+                <div class="eyebrow">
+                    <span></span> INDUSTRIAL SAFETY INTELLIGENCE
+                </div>
+
+                <h2>Facility overview</h2>
+                <p>
+                    Monitor safety activity, review incidents and track
+                    operational status.
+                </p>
+            </div>
+
+            <a class="button button-primary" href="#monitoring">
+                <span>▣</span> Open monitoring
+            </a>
+        </section>
+
+        <div class="demo-notice">
+            <span class="notice-icon">i</span>
+            <div>
+                <strong>DEVELOPMENT PREVIEW</strong>
+                <span>
+                    Dashboard metrics are illustrative until connected
+                    to real detection results and database records.
+                </span>
+            </div>
+        </div>
+
+        <!-- SUMMARY CARDS -->
+        <section class="metric-grid" aria-label="Safety summary">
+
+            <article class="metric-card">
+                <div class="metric-top">
+                    <span>CAMERAS CONFIGURED</span>
+                    <span class="metric-icon cyan">▣</span>
+                </div>
+                <div class="metric-value">
+                    01 <span class="metric-unit">local camera</span>
+                </div>
+                <div class="metric-bottom">
+                    Webcam configuration
+                </div>
+            </article>
+
+            <article class="metric-card">
+                <div class="metric-top">
+                    <span>INCIDENTS TODAY</span>
+                    <span class="metric-icon amber">⚑</span>
+                </div>
+                <div class="metric-value">—</div>
+                <div class="metric-bottom">
+                    Database integration pending
+                </div>
+            </article>
+
+            <article class="metric-card">
+                <div class="metric-top">
+                    <span>PPE COMPLIANCE</span>
+                    <span class="metric-icon green">✓</span>
+                </div>
+                <div class="metric-value">
+                    — <span class="metric-unit">%</span>
+                </div>
+                <div class="metric-bottom">
+                    Requires a validated PPE model
+                </div>
+            </article>
+
+            <article class="metric-card">
+                <div class="metric-top">
+                    <span>ACTIVE ALERTS</span>
+                    <span class="metric-icon red">!</span>
+                </div>
+                <div class="metric-value">—</div>
+                <div class="metric-bottom">
+                    Incident alert integration pending
+                </div>
+            </article>
+
+        </section>
+
+        <!-- MONITORING AND SAFETY ZONES -->
+        <section class="content-grid">
+
+            <article class="panel monitoring-panel" id="monitoring">
+
+                <div class="panel-heading">
+                    <div>
+                        <div class="section-kicker">
+                            VIDEO INTELLIGENCE
+                        </div>
+                        <h3>Monitoring centre</h3>
+                    </div>
+
+                    <span class="badge badge-muted"
+                          id="monitoringBadge">
+                        STOPPED
+                    </span>
+                </div>
+
+                <!-- LIVE YOLO VIDEO -->
+                <div class="video-placeholder live-video"
+                     id="liveVideoPanel">
+
+                    <img id="liveFeed"
+                         src=""
+                         alt="Live YOLO object detection feed">
+
+                    <div class="video-message" id="videoMessage">
+                        <div class="camera-symbol">▣</div>
+
+                        <div class="video-title">
+                            Live monitoring is stopped
+                        </div>
+
+                        <p>
+                            Click Live Monitoring or Start Monitoring
+                            to activate the camera and object detection.
+                        </p>
+                    </div>
+
+                    <div class="live-overlay">
+                        <span class="live-badge">
+                            ● LIVE AI DETECTION
+                        </span>
+
+                        <span class="record-indicator"
+                              id="recordIndicator">
+                            NOT RECORDING
+                        </span>
+                    </div>
+
+                    <div class="video-corner top-left"></div>
+                    <div class="video-corner top-right"></div>
+                    <div class="video-corner bottom-left"></div>
+                    <div class="video-corner bottom-right"></div>
+                </div>
+
+                <div class="camera-controls">
+                    <button class="button button-primary"
+                            id="startMonitoring"
+                            type="button">
+                        Start Monitoring
+                    </button>
+
+                    <button class="button button-secondary"
+                            id="stopMonitoring"
+                            type="button"
+                            disabled>
+                        Stop Monitoring
+                    </button>
+
+                    <button class="button button-secondary"
+                            id="startRecord"
+                            type="button"
+                            disabled>
+                        Start Recording
+                    </button>
+
+                    <button class="button button-secondary"
+                            id="stopRecord"
+                            type="button"
+                            disabled>
+                        Stop Recording
+                    </button>
+
+                    <span id="recordMessage">
+                        Monitoring is stopped.
+                    </span>
+                </div>
+
+                <div class="monitor-footer">
+                    <span>
+                        <i class="status-dot muted-dot"
+                           id="cameraStatusDot"></i>
+                        <span id="cameraStatusText">
+                            Camera stopped
+                        </span>
+                    </span>
+
+                    <span>AI model: YOLO11n</span>
+                </div>
+
+            </article>
+
+            <!-- SAFETY ZONES -->
+            <article class="panel zones-panel" id="zones">
+
+                <div class="panel-heading">
+                    <div>
+                        <div class="section-kicker">
+                            FACILITY LAYOUT
+                        </div>
+                        <h3>Safety zone overview</h3>
+                    </div>
+
+                    <span class="badge badge-amber">
+                        ILLUSTRATIVE
+                    </span>
+                </div>
+
+                <div class="zone-map">
+                    <div class="zone-grid-lines"></div>
+
+                    <div class="zone zone-green">
+                        <span class="zone-number">01</span>
+                        <strong>ENTRY</strong>
+                        <small>General access</small>
+                    </div>
+
+                    <div class="zone zone-amber">
+                        <span class="zone-number">02</span>
+                        <strong>PROCESS</strong>
+                        <small>Controlled area</small>
+                    </div>
+
+                    <div class="zone zone-red">
+                        <span class="zone-number">03</span>
+                        <strong>RESTRICTED</strong>
+                        <small>Authorisation required</small>
+                    </div>
+
+                    <div class="map-caption">
+                        CONCEPTUAL ZONE MAP · NOT A REAL PLANT PLAN
+                    </div>
+                </div>
+
+                <div class="zone-legend">
+                    <span>
+                        <i class="legend-dot green-bg"></i>
+                        General access
+                    </span>
+                    <span>
+                        <i class="legend-dot amber-bg"></i>
+                        Controlled
+                    </span>
+                    <span>
+                        <i class="legend-dot red-bg"></i>
+                        Restricted
+                    </span>
+                </div>
+
+            </article>
+        </section>
+
+        <!-- INCIDENT CENTRE -->
+        <section class="panel incidents-panel" id="incidents">
+
+            <div class="panel-heading incidents-heading">
+                <div>
+                    <div class="section-kicker">
+                        EVENT MANAGEMENT
+                    </div>
+
+                    <h3>Recent incidents</h3>
+
+                    <p>
+                        Incident history will appear here after
+                        database integration.
+                    </p>
+                </div>
+
+                <a href="#analytics" class="text-link">
+                    View analytics →
+                </a>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>INCIDENT ID</th>
+                            <th>EVENT</th>
+                            <th>ZONE</th>
+                            <th>SEVERITY</th>
+                            <th>TIME</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <span class="empty-icon">✓</span>
+                                <strong>No incident records loaded</strong>
+                                <span>
+                                    This is an empty state, not confirmation
+                                    that the facility is safe.
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+
+        <!-- ANALYTICS AND SYSTEM STATUS -->
+        <section class="bottom-grid">
+
+            <article class="panel" id="analytics">
+                <div class="panel-heading">
+                    <div>
+                        <div class="section-kicker">
+                            PERFORMANCE
+                        </div>
+                        <h3>Safety analytics</h3>
+                    </div>
+
+                    <span class="badge badge-muted">
+                        AWAITING DATA
+                    </span>
+                </div>
+
+                <div class="analytics-empty">
+                    <div class="bar-illustration">
+                        <span style="height:30%"></span>
+                        <span style="height:55%"></span>
+                        <span style="height:42%"></span>
+                        <span style="height:76%"></span>
+                        <span style="height:48%"></span>
+                        <span style="height:65%"></span>
+                        <span style="height:35%"></span>
+                    </div>
+
+                    <p>
+                        Charts will be populated from recorded incidents.
+                    </p>
+                </div>
+            </article>
+
+            <article class="panel" id="system">
+                <div class="panel-heading">
+                    <div>
+                        <div class="section-kicker">
+                            APPLICATION HEALTH
+                        </div>
+                        <h3>System status</h3>
+                    </div>
+                </div>
+
+                <div class="system-list">
+                    <div>
+                        <span>Flask backend</span>
+                        <span class="status-label online">
+                            ● Configured
+                        </span>
+                    </div>
+
+                    <div>
+                        <span>OpenCV video engine</span>
+                        <span class="status-label pending"
+                              id="opencvStatus">
+                            ○ Waiting
+                        </span>
+                    </div>
+
+                    <div>
+                        <span>SQLite database</span>
+                        <span class="status-label pending">
+                            ○ Integration pending
+                        </span>
+                    </div>
+
+                    <div>
+                        <span>YOLO detection model</span>
+                        <span class="status-label pending"
+                              id="yoloStatus">
+                            ○ Waiting
+                        </span>
+                    </div>
+                </div>
+            </article>
+
+        </section>
+
+        <footer class="page-footer">
+            <span>
+                AI SAFETY GUARDIAN
+                <span class="footer-separator">/</span>
+                CHEMICAL INDUSTRY
+            </span>
+
+            <span>
+                Academic prototype · Not a certified safety control system
+            </span>
+        </footer>
+
+    </main>
+</div>
+
+<script>
+    // Update the clock and date.
+    function updateClock() {
+        const now = new Date();
+
+        document.getElementById("clock").textContent =
+            now.toLocaleTimeString([], { hour12: false });
+
+        document.getElementById("date").textContent =
+            now.toLocaleDateString([], {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+
+
+    // Mobile sidebar.
+    const menuButton = document.getElementById("menuButton");
+    const sidebar = document.getElementById("sidebar");
+
+    menuButton.addEventListener("click", () => {
+        sidebar.classList.toggle("sidebar-open");
+    });
+
+
+    // Monitoring controls.
+    const liveFeed = document.getElementById("liveFeed");
+    const videoMessage = document.getElementById("videoMessage");
+    const recordMessage = document.getElementById("recordMessage");
+    const recordIndicator = document.getElementById("recordIndicator");
+
+    const startMonitoring =
+        document.getElementById("startMonitoring");
+
+    const stopMonitoring =
+        document.getElementById("stopMonitoring");
+
+    const startRecord =
+        document.getElementById("startRecord");
+
+    const stopRecord =
+        document.getElementById("stopRecord");
+
+    const cameraStatusText =
+        document.getElementById("cameraStatusText");
+
+    const cameraStatusDot =
+        document.getElementById("cameraStatusDot");
+
+    const monitoringBadge =
+        document.getElementById("monitoringBadge");
+
+    const opencvStatus =
+        document.getElementById("opencvStatus");
+
+    const yoloStatus =
+        document.getElementById("yoloStatus");
+
+    let monitoringStarted = false;
+    let recordingStarted = false;
+
+
+    function setSystemStatus(element, text, online) {
+        element.textContent = (online ? "● " : "○ ") + text;
+
+        element.classList.toggle("online", online);
+        element.classList.toggle("pending", !online);
+    }
+
+
+    function startLiveMonitoring() {
+        if (monitoringStarted) {
+            return;
+        }
+
+        monitoringStarted = true;
+
+        videoMessage.style.display = "none";
+        liveFeed.style.display = "block";
+
+        // The Flask endpoint returns an MJPEG stream.
+        liveFeed.src = "/video_feed?ts=" + Date.now();
+
+        recordMessage.textContent =
+            "Connecting to the camera and YOLO model...";
+
+        cameraStatusText.textContent = "Connecting...";
+        cameraStatusDot.classList.remove("muted-dot");
+
+        monitoringBadge.textContent = "CONNECTING";
+
+        startMonitoring.disabled = true;
+        stopMonitoring.disabled = false;
+        startRecord.disabled = false;
+
+        checkHealth();
+    }
+
+
+    function stopLiveMonitoring() {
+        if (recordingStarted) {
+            recordMessage.textContent =
+                "Stop recording before stopping monitoring.";
+            return;
+        }
+
+        monitoringStarted = false;
+
+        liveFeed.removeAttribute("src");
+        liveFeed.style.display = "none";
+
+        videoMessage.style.display = "flex";
+
+        videoMessage.querySelector(".video-title").textContent =
+            "Live monitoring is stopped";
+
+        videoMessage.querySelector("p").textContent =
+            "Click Live Monitoring or Start Monitoring to activate detection.";
+
+        cameraStatusText.textContent = "Camera stopped";
+        cameraStatusDot.classList.add("muted-dot");
+
+        monitoringBadge.textContent = "STOPPED";
+
+        startMonitoring.disabled = false;
+        stopMonitoring.disabled = true;
+        startRecord.disabled = true;
+
+        recordMessage.textContent = "Monitoring is stopped.";
+
+        setSystemStatus(opencvStatus, "Waiting", false);
+        setSystemStatus(yoloStatus, "Waiting", false);
+    }
+
+
+    async function checkHealth() {
+        try {
+            const response = await fetch("/api/health");
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error("Health check failed");
+            }
+
+            const cameraAvailable = data.camera === "available";
+
+            cameraStatusText.textContent = cameraAvailable
+                ? "Camera available"
+                : "Camera unavailable";
+
+            setSystemStatus(
+                opencvStatus,
+                cameraAvailable ? "Camera available" : "Camera unavailable",
+                cameraAvailable
+            );
+
+            const modelLoaded =
+                data.model === "YOLO loaded";
+
+            setSystemStatus(
+                yoloStatus,
+                modelLoaded ? "Model loaded" : "Model status unknown",
+                modelLoaded
+            );
+
+            if (!cameraAvailable) {
+                recordMessage.textContent =
+                    "Camera unavailable. Check Windows camera permissions.";
+            }
+
+        } catch (error) {
+            recordMessage.textContent =
+                "Could not read system status. Check the Flask terminal.";
+        }
+    }
+
+
+    liveFeed.addEventListener("load", () => {
+        if (!monitoringStarted) {
+            return;
+        }
+
+        cameraStatusText.textContent = "Live feed active";
+        monitoringBadge.textContent = "LIVE";
+
+        recordMessage.textContent =
+            "Live YOLO detection feed connected.";
+    });
+
+
+    liveFeed.addEventListener("error", () => {
+        if (!monitoringStarted) {
+            return;
+        }
+
+        videoMessage.style.display = "flex";
+
+        videoMessage.querySelector(".video-title").textContent =
+            "Live feed unavailable";
+
+        videoMessage.querySelector("p").textContent =
+            "Check that Flask is running and that the webcam is available.";
+
+        cameraStatusText.textContent = "Camera unavailable";
+        monitoringBadge.textContent = "ERROR";
+
+        recordMessage.textContent =
+            "Could not connect to the feed. Check the VS Code terminal.";
+    });
+
+
+    // Start monitoring when the user clicks Live Monitoring.
+    document.querySelectorAll('a[href="#monitoring"]').forEach(link => {
+        link.addEventListener("click", () => {
+            startLiveMonitoring();
+        });
+    });
+
+
+    startMonitoring.addEventListener("click", () => {
+        startLiveMonitoring();
+    });
+
+
+    stopMonitoring.addEventListener("click", () => {
+        stopLiveMonitoring();
+    });
+
+
+    // Start recording through Flask.
+    startRecord.addEventListener("click", async () => {
+        if (!monitoringStarted) {
+            startLiveMonitoring();
+        }
+
+        startRecord.disabled = true;
+        recordMessage.textContent = "Starting recording...";
+
+        try {
+            const response = await fetch("/api/record/start", {
+                method: "POST"
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || "Could not start recording."
+                );
+            }
+
+            recordingStarted = true;
+
+            recordIndicator.textContent = "● RECORDING";
+            recordIndicator.classList.add("recording");
+
+            recordMessage.textContent =
+                "Saving: " + (data.filename || "video recording");
+
+            stopRecord.disabled = false;
+            stopMonitoring.disabled = true;
+
+        } catch (error) {
+            recordMessage.textContent = error.message;
+            startRecord.disabled = false;
+        }
+    });
+
+
+    // Stop recording and finalize the video file.
+    stopRecord.addEventListener("click", async () => {
+        stopRecord.disabled = true;
+
+        recordMessage.textContent = "Stopping recording...";
+
+        try {
+            const response = await fetch("/api/record/stop", {
+                method: "POST"
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || "Could not stop recording."
+                );
+            }
+
+            recordingStarted = false;
+
+            recordIndicator.textContent = "NOT RECORDING";
+            recordIndicator.classList.remove("recording");
+
+            recordMessage.textContent =
+                "Recording stopped. Check the recordings folder.";
+
+            startRecord.disabled = false;
+            stopMonitoring.disabled = false;
+
+        } catch (error) {
+            recordMessage.textContent = error.message;
+            stopRecord.disabled = false;
+        }
+    });
+
+
+    // Update navigation highlighting.
+    document.querySelectorAll(".nav-link").forEach(link => {
+        link.addEventListener("click", () => {
+            document.querySelectorAll(".nav-link").forEach(item => {
+                item.classList.remove("active");
+            });
+
+            link.classList.add("active");
+            sidebar.classList.remove("sidebar-open");
+        });
+    });
+</script>
+</body>
+</html>
